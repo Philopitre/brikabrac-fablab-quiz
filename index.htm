@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vrai ou Faux – Découvrez les Fab-Labs</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>🔍 Vrai ou Faux – Découvrez les Fab-Labs</h1>
+      <p>Un quiz pour démystifier les fablabs — en particulier le <strong>Fab-C de Charleroi</strong> !</p>
+    </header>
+
+    <main id="quiz-container">
+      <!-- Les questions seront injectées ici par JavaScript -->
+    </main>
+
+    <footer>
+      <button id="submit-btn" disabled>Valider mes réponses</button>
+      <div id="result" class="hidden"></div>
+      <button id="restart-btn" class="hidden"
+        style="margin-top: 20px; padding: 10px 20px; background: #95a5a6; color: white; border: none; border-radius: 6px; cursor: pointer;">🔁
+        Rejouer
+      </button>
+      <div id="share-buttons" class="share-buttons hidden">
+        <a href="#" class="share-btn fb-btn" id="share-fb">📱 Partager sur Facebook</a>
+      </div>
+      <div id="fab-c-info" class="hidden">
+        <h2>💡 À propos du Fab-C de Charleroi</h2>
+        <p>Le Fab-C est un fablab ouvert à tous, situé à Charleroi. Il propose des ateliers, des formations, et un
+          espace de création numérique pour les citoyens, les écoles, les artistes et les entrepreneurs.</p>
+        <p>👉 <a href="https://fablab-charleroi.be/" target="_blank">Découvrez le Fab-C</a></p>
+      </div>
+      <div id="agrilab-info" class="hidden">
+        <h2>🎥 Vidéos sur les fablabs</h2>
+        <p>Ce quiz s’inspire de contenus pédagogiques disponibles sur la chaîne <a
+            href="https://tube.oisux.org/c/agrilab_channel/videos" target="_blank">Agrilab Channel</a> (CC BY-NC-SA
+          4.0).</p>
+        <p>Créé par <strong>Luc Hanneuse</strong>. Vous pouvez réutiliser ce contenu à but non commercial, en citant
+          l’auteur et en respectant les mêmes conditions de licence.</p>
+      </div>
+      <button id="restart-btn" class="hidden"
+        style="margin-top: 20px; padding: 10px 20px; background: #95a5a6; color: white; border: none; border-radius: 6px; cursor: pointer;">🔁
+        Rejouer
+      </button>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
