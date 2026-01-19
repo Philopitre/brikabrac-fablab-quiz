@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Quiz interactif pour découvrir les fablabs et le Fab-C de Charleroi. Testez vos connaissances avec 20 questions sur la fabrication numérique." />
+  <meta name="keywords" content="fablab, quiz, Charleroi, Fab-C, fabrication numérique, maker" />
+  <title>Vrai ou Faux – Découvrez les Fab-Labs</title>
+  <link rel="stylesheet" href="./styles.css?v=3.0.0">
+</head>
+
+<body>
+  <main class="page">
+    <article class="card">
+      <header class="header">
+        <h1 class="title">🔍 Vrai ou Faux – Découvrez les Fab-Labs</h1>
+        <p class="subtitle">
+          Quiz pour démystifier les fablabs — en particulier le <strong><a href="https://fablab-charleroi.be/"
+              target="_blank" rel="noopener noreferrer">Fab-C de Charleroi</a></strong> !
+        </p>
+      </header>
+
+      <section id="stats-root" aria-live="polite"></section>
+      <section id="content-root" role="region" aria-label="Contenu du quiz"></section>
+    </article>
+  </main>
+
+  <!-- ✅ jsPDF requis pour les diplômes et modules qrCode -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+
+  <!-- ✅ module -->
+  <script type="module" src="./js/app.js?v=3.0.0"></script>
+</body>
+
+</html>
