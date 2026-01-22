@@ -1,4 +1,3 @@
-// render.js
 import { QUESTIONS } from "./questions.js";
 import { shuffle, allAnswered } from "./utils.js";
 import { saveStateSilently, clearSavedState, createInitialState } from "./state.js";
@@ -14,7 +13,10 @@ export function createRenderer({
   $statsRoot,
   $contentRoot,
   getState,
-  setState
+  setState,
+
+  // ✅ NEW
+  APP_VERSION = ""
 }) {
   const MIN_QUESTIONS_PER_LEVEL_TO_UNLOCK = 15;
   const UNLOCK_THRESHOLD = 0.8;
@@ -58,7 +60,6 @@ export function createRenderer({
     });
   }
 
-  // ✅ scroll vers la correction (et pas en haut)
   function scrollToCorrection() {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -169,7 +170,6 @@ export function createRenderer({
     for (let lvl = clampLevel(fromLevel); lvl <= 3; lvl++) {
       if (countPendingForLevel(state, lvl) > 0) return lvl;
     }
-    // boucle depuis 1 si on est passé au-delà
     for (let lvl = 1; lvl <= 3; lvl++) {
       if (countPendingForLevel(state, lvl) > 0) return lvl;
     }
@@ -177,7 +177,6 @@ export function createRenderer({
   }
 
   function pickQuestionsForLevelRevision(state, level, count) {
-    // Mode révision : uniquement les questions jamais vues + celles ratées.
     const unseen = getUnseenIndicesForLevel(state, level);
     const incorrect = getIncorrectIndicesForLevel(state, level);
     const pool = Array.from(new Set([...unseen, ...incorrect]));
@@ -187,6 +186,46 @@ export function createRenderer({
       picked.push(idx);
     }
     return picked;
+  }
+
+  // ✅ NEW: bloc “à propos / liens / licence / version”
+  function renderAboutBox() {
+    const box = document.createElement("div");
+    box.className = "infoBox";
+    box.style.marginTop = "14px";
+
+    const versionLine = (APP_VERSION && String(APP_VERSION).trim().length)
+      ? `<div style="margin-top:10px; font-size:.92rem; color:#4a5568;"><b>Version du quiz :</b> ${String(APP_VERSION).trim()}</div>`
+      : "";
+
+    box.innerHTML = `
+      <h3 style="margin:0 0 8px;">💡 À propos du Fab-C de Charleroi</h3>
+
+      <p style="margin:0 0 10px;">
+        Le <b>Fab-C</b> est un fablab ouvert à tous, situé à Charleroi.
+        Il propose des ateliers, des formations, et un espace de création numérique.
+      </p>
+
+      <div style="display:flex; flex-wrap:wrap; gap:10px; margin:10px 0 12px;">
+        <a href="https://fablab-charleroi.be/" target="_blank" rel="noopener noreferrer">👉 Découvrez le Fab-C</a>
+        <a href="https://www.youtube.com/results?search_query=fablab" target="_blank" rel="noopener noreferrer">🎥 Vidéos sur les fablabs</a>
+      </div>
+
+      <hr style="border:none; border-top:1px solid var(--border); margin:12px 0;" />
+
+      <p style="margin:0; font-size:.92rem; color:#4a5568;">
+        Ce quiz s'inspire de contenus pédagogiques disponibles sur la chaîne <b>Agrilab Channel</b> (CC BY-NC-SA 4.0).
+      </p>
+
+      <p style="margin:8px 0 0; font-size:.92rem; color:#4a5568;">
+        Créé par <b>Luc Hanneuse</b>. Vous pouvez réutiliser ce contenu à but non commercial,
+        en citant l'auteur et en respectant les mêmes conditions de licence.
+      </p>
+
+      ${versionLine}
+    `;
+
+    return box;
   }
 
   function ensureName() {
@@ -217,7 +256,6 @@ export function createRenderer({
     let percentage;
 
     if (isFinal) {
-      // ✅ diplôme final = note globale (cumulée)
       total = typeof state.totalAnswered === "number" ? state.totalAnswered : 0;
       score = typeof state.totalScore === "number" ? state.totalScore : 0;
       percentage = total > 0 ? Math.round((score / total) * 100) : 0;
@@ -283,7 +321,6 @@ export function createRenderer({
     if (revisionMode) {
       const nextLvl = findNextPendingLevel(state, currentLevel);
       if (nextLvl === null) {
-        // ✅ plus rien à réviser : sortie du mode révision
         const next = { ...state, revisionMode: false, showResults: true, currentQuestions: [], userAnswers: [] };
         setState(next);
         saveStateSilently(next);
@@ -345,7 +382,6 @@ export function createRenderer({
   function submitAnswers() {
     const state = getState();
 
-    // ✅ garde-fou: impossible de valider si tout n'est pas répondu
     if (!allAnswered(state.userAnswers || [], (state.currentQuestions || []).length)) {
       alert("Réponds à chaque question avant de valider 🙂");
       return;
@@ -439,7 +475,6 @@ export function createRenderer({
 
     if (unlockedNow) askDownloadCertificate({ level: currentLevel, isFinal: false });
 
-    // ✅ à la fin du niveau 3 : proposer diplôme N3 puis diplôme final
     if (finalNow) {
       setTimeout(() => askDownloadCertificate({ level: 3, isFinal: false }), 250);
       setTimeout(() => askDownloadCertificate({ level: 3, isFinal: true }), 650);
@@ -525,6 +560,9 @@ export function createRenderer({
     if (resetBtn) resetBtn.onclick = () => resetAll();
 
     $contentRoot.appendChild(wrap);
+
+    // ✅ Option 1 : afficher le bloc "À propos" uniquement ici (Accueil)
+    $contentRoot.appendChild(renderAboutBox());
   }
 
   function renderQuestions() {
@@ -562,6 +600,8 @@ export function createRenderer({
     });
 
     $contentRoot.appendChild(container);
+
+    // ❌ Important : PAS de bloc "À propos" pendant les questions (harmonie)
   }
 
   function renderDiplomasBox() {
@@ -635,53 +675,50 @@ export function createRenderer({
   }
 
   function renderRoundCorrectionBlock() {
-    const state = getState();
-    const qs = state.currentQuestions || [];
-    const ua = state.userAnswers || [];
-    if (!qs.length) return null;
+  const state = getState();
+  const qs = state.currentQuestions || [];
+  const ua = state.userAnswers || [];
+  if (!qs.length) return null;
 
-    const wrap = document.createElement("div");
-    wrap.id = "round-correction";
-    wrap.className = "infoBox";
-    wrap.style.marginTop = "12px";
-    wrap.innerHTML = `<h3 style="margin:0 0 6px;">Correction</h3>`;
+  const wrap = document.createElement("div");
+  wrap.id = "round-correction";
+  wrap.className = "infoBox";
+  wrap.style.marginTop = "12px";
 
-    const list = document.createElement("div");
-    list.style.marginTop = "10px";
+  wrap.innerHTML = `
+    <h3 style="margin:0 0 10px;">🧠 Correction complète</h3>
+    <div class="correctionList">
+      ${qs.map((q, i) => {
+        const user = ua[i];
+        const isCorrect = user === q.correct;
 
-    qs.forEach((q, i) => {
-      const user = ua[i];
-      const isCorrect = user === q.correct;
-      const userLabel = (user === true) ? "Vrai" : (user === false) ? "Faux" : "—";
-      const correctLabel = q.correct ? "Vrai" : "Faux";
+        const userLabel = (user === true) ? "Vrai" : (user === false) ? "Faux" : "—";
+        const correctLabel = q.correct ? "Vrai" : "Faux";
+        const expl = (q.explanation || "").trim();
 
-      const row = document.createElement("div");
-      row.className = "questionCard";
-      row.style.margin = "10px 0";
-      row.style.borderLeft = isCorrect ? "6px solid var(--success)" : "6px solid var(--danger)";
+        return `
+          <div class="correctionItem ${isCorrect ? "ok" : "ko"}">
+            <div class="correctionTop">
+              <div class="correctionIcon">${isCorrect ? "✅" : "❌"}</div>
+              <div class="correctionQ"><b>${q.question}</b></div>
+            </div>
 
-      const expl = (q.explanation || "").trim();
+            <div class="correctionMeta">
+              <span class="tag ${isCorrect ? "tagOk" : "tagWrong"}">Ta réponse : ${userLabel}</span>
+              <span class="tag tagCorrect">Bonne réponse : ${correctLabel}</span>
+            </div>
 
-      row.innerHTML = `
-        <h3 class="qTitle">${isCorrect ? "✅ Bonne réponse" : "❌ Mauvaise réponse"} — Question ${i + 1}/${qs.length}</h3>
-        <p class="qText">${q.question}</p>
-        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
-          <div style="padding:6px 10px; border-radius:10px; background:#f3f4f6;">
-            Ta réponse : <b>${userLabel}</b>
+            ${expl ? `<div class="correctionExplain">${expl}</div>` : ""}
           </div>
-          <div style="padding:6px 10px; border-radius:10px; background:#f3f4f6;">
-            Bonne réponse : <b>${correctLabel}</b>
-          </div>
-        </div>
-        ${expl ? `<div class="infoBox" style="margin-top:10px;"><b>Explication :</b> ${expl}</div>` : ""}
-      `;
+        `;
+      }).join("")}
+    </div>
+  `;
 
-      list.appendChild(row);
-    });
+  return wrap;
+}
 
-    wrap.appendChild(list);
-    return wrap;
-  }
+
 
   function renderResults() {
     const state = getState();
@@ -731,7 +768,6 @@ export function createRenderer({
 
     container.appendChild(box);
 
-    // ✅ correction + boutons en bas de correction
     if (state.showRoundCorrection) {
       const corr = renderRoundCorrectionBlock();
       if (corr) {
@@ -754,7 +790,6 @@ export function createRenderer({
     const diplomas = renderDiplomasBox();
     if (diplomas) container.appendChild(diplomas);
 
-    // ✅ Défi 100% : proposer de repartir du niveau 1 pour rejouer les ratées + jamais vues
     if (canUnlock(state, 3)) {
       const pending = computeGlobalPending(state);
       const challenge = document.createElement("div");
@@ -815,6 +850,9 @@ export function createRenderer({
     shareBox.appendChild(shareRow);
 
     container.appendChild(shareBox);
+
+    // ✅ Option 1 : afficher le bloc "À propos" uniquement ici (Résultats)
+    container.appendChild(renderAboutBox());
 
     $contentRoot.appendChild(container);
   }
