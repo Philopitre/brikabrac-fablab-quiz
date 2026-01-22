@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ✅ Version affichée dans le bloc "À propos"
   // Mets ici la version que tu veux montrer (ex: 3.0.0)
-  const APP_VERSION = "3.0.0";
+  const APP_VERSION = "3.0.5";
 
   const $statsRoot = document.getElementById("stats-root");
   const $contentRoot = document.getElementById("content-root");
