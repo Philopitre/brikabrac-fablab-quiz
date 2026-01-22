@@ -1,4 +1,4 @@
-// certificates.js
+// certificates.js — Version Diplôme Officiel
 
 function getJsPdf() {
   const jspdf = window.jspdf;
@@ -35,9 +35,6 @@ function safeName(name) {
 
 function levelTitleShort(level, isFinal) {
   if (isFinal) return "FINAL";
-  if (level === 1) return "N1";
-  if (level === 2) return "N2";
-  if (level === 3) return "N3";
   return `N${level}`;
 }
 
@@ -72,94 +69,58 @@ function makeCertificateId({ name, level, score, total, percentage, isFinal, qui
   return `BBFC-${todayCompact()}-${fnv1aHex(base)}`;
 }
 
-// jsPDF helper: texte qui tient dans un maxWidth (taille auto)
-function fitText(doc, text, maxWidth, startSize, style = "bold", minSize = 12) {
-  let size = startSize;
-  doc.setFont("helvetica", style);
-  while (size > minSize) {
-    doc.setFontSize(size);
-    if (doc.getTextWidth(text) <= maxWidth) return size;
-    size -= 1;
-  }
-  doc.setFontSize(minSize);
-  return minSize;
-}
-
-// Filigrane “zine”
-function drawWatermark(doc, pageW, pageH, text) {
-  doc.setTextColor(245);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(56);
-  try {
-    doc.text(text, pageW / 2, pageH / 2 + 10, { align: "center", angle: -18 });
-  } catch {
-    doc.text(text, pageW / 2, pageH / 2 + 10, { align: "center" });
-  }
-  doc.setTextColor(20);
-}
-
-// Cadre fanzine (double + “découpes”)
-function drawZineFrame(doc, pageW, pageH) {
-  doc.setDrawColor(15);
-  doc.setLineWidth(1.2);
+// Nouveau cadre officiel
+function drawDiplomaFrame(doc, pageW, pageH) {
+  // Bordure extérieure dorée
+  doc.setDrawColor(201, 162, 39);
+  doc.setLineWidth(2.2);
   doc.rect(10, 10, pageW - 20, pageH - 20);
 
-  doc.setDrawColor(15);
-  doc.setLineWidth(0.35);
+  // Bordure intérieure fine
+  doc.setDrawColor(80);
+  doc.setLineWidth(0.6);
   doc.rect(16, 16, pageW - 32, pageH - 32);
-
-  // petits “traits” façon impression
-  doc.setLineWidth(0.8);
-  for (let i = 0; i < 8; i++) {
-    const x = 18 + i * 34;
-    doc.line(x, 16, x + 10, 16);
-    doc.line(x, pageH - 16, x + 10, pageH - 16);
-  }
-  doc.setLineWidth(0.35);
 }
 
-// Bandeau couleur (style fanzine)
-function drawColorHeader(doc, pageW, accent) {
-  // grand bandeau
-  doc.setFillColor(accent.r, accent.g, accent.b);
-  doc.rect(16, 16, pageW - 32, 30, "F");
+// Sceau officiel
+function drawOfficialSeal(doc, x, y) {
+  doc.setDrawColor(201, 162, 39);
+  doc.setFillColor(255, 255, 255);
 
-  // bandeau secondaire (noir)
-  doc.setFillColor(10, 10, 10);
-  doc.rect(16, 46, pageW - 32, 8, "F");
-}
+  doc.setLineWidth(1.5);
+  doc.circle(x, y, 18, "S");
 
-// Badge “tampon”
-function drawStampPhilow(doc, x, y, angle = -12) {
-  // cercle + texte
-  doc.setDrawColor(120, 0, 40);
-  doc.setTextColor(120, 0, 40);
   doc.setLineWidth(0.8);
-
-  // cercle
   doc.circle(x, y, 14, "S");
 
-  // traits
-  doc.setLineWidth(0.5);
-  doc.circle(x, y, 12, "S");
-
-  doc.setFont("helvetica", "bold");
+  doc.setFont("times", "bold");
   doc.setFontSize(10);
-
-  try {
-    doc.text("PHILOW", x, y + 2, { align: "center", angle });
-    doc.setFontSize(7);
-    doc.text("SUPERVISION", x, y + 9, { align: "center", angle });
-  } catch {
-    doc.text("PHILOW", x, y + 2, { align: "center" });
-    doc.setFontSize(7);
-    doc.text("SUPERVISION", x, y + 9, { align: "center" });
-  }
-
-  // reset
-  doc.setTextColor(20);
-  doc.setDrawColor(15);
+  doc.text("FABLAB", x, y - 2, { align: "center" });
+  doc.setFontSize(8);
+  doc.text("CERTIFIÉ", x, y + 4, { align: "center" });
 }
+
+// Signatures officielles
+function drawSignatures(doc, pageW, pageH) {
+  const y = pageH - 35;
+
+  doc.setFont("times", "italic");
+  doc.setFontSize(12);
+
+  // Ligne gauche (Sylvain)
+  doc.line(40, y, 120, y);
+  doc.text("Responsable du FabLab", 80, y + 6, { align: "center" });
+  doc.setFont("times", "bold");
+  doc.text("Sylvain", 80, y + 12, { align: "center" });
+
+  // Ligne droite (Philow)
+  doc.setFont("times", "italic");
+  doc.line(pageW - 120, y, pageW - 40, y);
+  doc.text("Coordinateur pédagogique", pageW - 80, y + 6, { align: "center" });
+  doc.setFont("times", "bold");
+  doc.text("Philow", pageW - 80, y + 12, { align: "center" });
+}
+
 
 // QR code -> dataURL
 function makeQrDataUrl(text, sizePx = 220) {
@@ -202,15 +163,6 @@ function makeQrDataUrl(text, sizePx = 220) {
   return canvas.toDataURL("image/png");
 }
 
-function accentForLevel(level, isFinal) {
-  // couleurs franches “zine”
-  if (isFinal) return { r: 250, g: 204, b: 21 };     // jaune “trophée”
-  if (level === 1) return { r: 0, g: 185, b: 255 };  // cyan
-  if (level === 2) return { r: 255, g: 64, b: 129 }; // magenta
-  if (level === 3) return { r: 0, g: 230, b: 118 };  // vert
-  return { r: 180, g: 180, b: 180 };
-}
-
 export function generateCertificatePdf({
   participantName,
   level,
@@ -234,146 +186,64 @@ export function generateCertificatePdf({
 
   const certId = makeCertificateId({ name, level, score, total, percentage, isFinal, quizUrl: url });
 
-  const accent = accentForLevel(level, isFinal);
+  // Cadre officiel
+  drawDiplomaFrame(doc, pageW, pageH);
 
-  // Base
+  // Titre
+  doc.setFont("times", "bold");
+  doc.setFontSize(32);
   doc.setTextColor(20);
-  doc.setDrawColor(15);
+  doc.text("CERTIFICAT DE RÉUSSITE", pageW / 2, 40, { align: "center" });
 
-  // Cadre + watermark
-  drawZineFrame(doc, pageW, pageH);
-  drawWatermark(doc, pageW, pageH, "BRIKABRAC × FAB-C");
+  doc.setFont("times", "italic");
+  doc.setFontSize(16);
+  doc.text("Décerné par le FabLab Brikabrac × Fab-C", pageW / 2, 52, { align: "center" });
 
-  // Header coloré
-  drawColorHeader(doc, pageW, accent);
+  // Nom
+  doc.setFont("times", "normal");
+  doc.setFontSize(16);
+  doc.text("Ce certificat est attribué à", pageW / 2, 80, { align: "center" });
 
-  // Header text
-  doc.setTextColor(255);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(20);
-  doc.text("DIPLOME — QUIZ FABLAB", 22, 34);
+  doc.setFont("times", "bold");
+  doc.setFontSize(26);
+  doc.text(name, pageW / 2, 100, { align: "center" });
 
+  // Résultat
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(11);
-  doc.text("Brikabrac × Fab-C — connaissances partagées, connaissances multipliées.", 22, 42);
+  doc.setFontSize(14);
+  doc.text(
+    isFinal ? "Pour avoir validé l'ensemble du parcours" : `Pour avoir validé ${levelTitleLong(level)}`,
+    pageW / 2,
+    120,
+    { align: "center" }
+  );
 
-  // Bandeau noir (tag)
-  doc.setTextColor(255);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  const tag = isFinal ? "CERTIFICATION FINALE" : `VALIDATION ${levelTitleLong(level).toUpperCase()}`;
-  doc.text(tag, 22, 52);
+  doc.setFontSize(16);
+  doc.text(`Score : ${score}/${total} (${percentage}%)`, pageW / 2, 135, { align: "center" });
 
-  // Bloc principal (plus compact)
-  // Zone gauche pour texte, zone droite dédiée QR (aucun chevauchement)
-  const contentX = 22;
-  const contentY = 66;
-  const contentW = pageW - 44;
-  const contentH = 120;
-
-  // séparation colonne QR
-  const qrColW = 48;
-  const leftW = contentW - qrColW - 10;
-
-  // Boîte nom compacte (pas énorme)
-  const nameBoxX = contentX;
-  const nameBoxY = contentY + 10;
-  const nameBoxW = leftW;
-  const nameBoxH = 30;
-
-  doc.setFillColor(255, 255, 255);
-  doc.setDrawColor(15);
-  doc.setLineWidth(0.35);
-  doc.roundedRect(nameBoxX, nameBoxY, nameBoxW, nameBoxH, 3, 3, "FD");
-
-  doc.setTextColor(30);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(11);
-  doc.text("Décerné à :", nameBoxX + 8, nameBoxY + 11);
-
-  doc.setTextColor(10);
-  const nameSize = fitText(doc, name, nameBoxW - 16, 18, "bold", 12);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(nameSize);
-  doc.text(name, nameBoxX + nameBoxW / 2, nameBoxY + 23, { align: "center" });
-
-  // Bloc infos (sous le nom)
-  const infoY = nameBoxY + nameBoxH + 12;
-
-  doc.setTextColor(20);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
-  doc.text(isFinal ? "Résultat final" : "Résultat", contentX, infoY);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(12);
-  doc.text(`Score : ${score}/${total} — ${percentage}%`, contentX, infoY + 10);
-
-  doc.setFontSize(11);
-  doc.setTextColor(40);
-  doc.text("Délivré par : Brikabrac × Fab-C", contentX, infoY + 22);
-  doc.text("Sous la supervision de Philow", contentX, infoY + 30);
-  doc.text(`Date : ${dateStr}`, contentX, infoY + 38);
-
-  // ID certificat (look “étiquette”)
-  const idY = infoY + 54;
-  doc.setFillColor(245, 245, 245);
-  doc.roundedRect(contentX, idY - 8, leftW * 0.72, 14, 2, 2, "F");
-  doc.setTextColor(30);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.text(`ID : ${certId}`, contentX + 6, idY + 2);
-
-  // QR colonne droite — zone dédiée (fond blanc + bord)
-  const qrBoxX = contentX + leftW + 10;
-  const qrBoxY = contentY + 10;
-  const qrBoxSize = 40;
-
-  doc.setFillColor(255, 255, 255);
-  doc.setDrawColor(15);
-  doc.setLineWidth(0.35);
-  doc.roundedRect(qrBoxX, qrBoxY, qrColW, 56, 3, 3, "FD");
-
-  doc.setTextColor(20);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.text("REJOUER", qrBoxX + qrColW / 2, qrBoxY + 10, { align: "center" });
-
+  // QR code
   const qrDataUrl = url ? makeQrDataUrl(url, 220) : null;
   if (qrDataUrl) {
-    try {
-      doc.addImage(qrDataUrl, "PNG", qrBoxX + 4, qrBoxY + 14, qrBoxSize, qrBoxSize);
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
-      doc.setTextColor(60);
-      doc.text("Scanner le QR", qrBoxX + qrColW / 2, qrBoxY + 55, { align: "center" });
-    } catch {
-      // pas de QR si addImage échoue
-    }
-  } else {
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(60);
-    doc.text("QR indisponible", qrBoxX + qrColW / 2, qrBoxY + 32, { align: "center" });
+    doc.addImage(qrDataUrl, "PNG", pageW - 70, 30, 40, 40);
   }
 
-  // Tampon Philow (style “encré”)
-  drawStampPhilow(doc, qrBoxX + qrColW / 2, qrBoxY + 74, -12);
-
-  // Footer “zine” + devise (couleur accent)
-  doc.setFillColor(accent.r, accent.g, accent.b);
-  doc.rect(16, pageH - 26, pageW - 32, 10, "F");
-  doc.setTextColor(10);
-  doc.setFont("helvetica", "bold");
+  // ID
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  doc.text("« La connaissance se multiplie quand on la partage. »", pageW / 2, pageH - 19, { align: "center" });
+  doc.text(`ID : ${certId}`, 20, pageH - 20);
 
-  // File name
+  // Sceau officiel
+  drawOfficialSeal(doc, 40, 150);
+
+  // Signatures
+  drawSignatures(doc, pageW, pageH);
+
+  // Nom du fichier
   const fileSafe = name.replace(/[^\w\-]+/g, "_").slice(0, 40);
   const fileName = isFinal
     ? `Diplome_Final_${fileSafe}.pdf`
     : `Diplome_${levelTitleShort(level, isFinal)}_${fileSafe}.pdf`;
 
-  // Le save est déclenché par render.js (après confirmation user)
   return { doc, fileName, certId, url };
 }
