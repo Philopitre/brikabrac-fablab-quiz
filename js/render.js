@@ -3,6 +3,7 @@ import { shuffle, allAnswered } from "./utils.js";
 import { saveStateSilently, clearSavedState, createInitialState } from "./state.js";
 import { shareOnFacebook, copyLinkFeedback } from "./share.js";
 import { generateCertificatePdf } from "./certificates.js";
+import { debounce } from "./utils.js";
 
 const announceToScreenReader = (msg) => console.log("🔊", msg);
 
@@ -228,6 +229,17 @@ export function createRenderer({
     return box;
   }
 
+  function setupNameInput(input, setState, getState) {
+    const saveName = debounce((value) => {
+      const state = getState();
+      setState({ ...state, participantName: value });
+  }, 400);
+    
+    input.addEventListener("input", (e) => {
+      saveName(e.target.value);
+    });
+  }
+  
   function ensureName() {
     const state = getState();
     const current = (state.participantName || "").trim();
@@ -717,7 +729,6 @@ export function createRenderer({
 
   return wrap;
 }
-
 
 
   function renderResults() {
