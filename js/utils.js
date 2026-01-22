@@ -24,3 +24,11 @@ export function allAnswered(userAnswers, expectedCount) {
   if (userAnswers.length !== expectedCount) return false;
   return userAnswers.every(v => v !== undefined && v !== null);
 }
+
+export function debounce(fn, delay = 300) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
