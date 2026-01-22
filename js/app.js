@@ -6,6 +6,10 @@ import { TOTAL_QUESTIONS, MAX_GAMES } from "./questions.js";
 document.addEventListener("DOMContentLoaded", () => {
   const QUESTIONS_PER_GAME = 5;
 
+  // ✅ Version affichée dans le bloc "À propos"
+  // Mets ici la version que tu veux montrer (ex: 3.0.0)
+  const APP_VERSION = "3.0.0";
+
   const $statsRoot = document.getElementById("stats-root");
   const $contentRoot = document.getElementById("content-root");
 
@@ -28,8 +32,12 @@ document.addEventListener("DOMContentLoaded", () => {
     $statsRoot,
     $contentRoot,
     getState: () => state,
-    setState: (next) => { state = next; }
+    setState: (next) => { state = next; },
+
+    // ✅ NEW
+    APP_VERSION
   });
 
   renderer.render();
 });
+  
